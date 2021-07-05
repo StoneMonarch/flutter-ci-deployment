@@ -58,6 +58,7 @@ jobs:
     name: Build Linux
     runs-on: ubuntu-latest
     steps:
+      - run: apt install -y clang cmake ninja-build pkg-config libgtk-3-dev
       - uses: actions/checkout@v2
       - uses: actions/setup-java@v1
         with:
@@ -65,6 +66,7 @@ jobs:
       - uses: subosito/flutter-action@v1
       - run: flutter config --enable-linux-desktop
       - run: flutter doctor
+      - run: flutter build linux 
   
   build_windows:
 #     needs: test
@@ -79,3 +81,4 @@ jobs:
       - uses: subosito/flutter-action@v1
       - run: flutter config --enable-windows-desktop
       - run: flutter doctor
+      - run: flutter build windows
