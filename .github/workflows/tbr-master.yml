@@ -8,23 +8,23 @@ on:
 
 jobs:
   test:
-    name: Flutter Test (Ubuntu Latest)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup Java
-        uses: actions/setup-java@v1
-        with:
-          java-version: '14.x'
-      - name: Setup flutter
-        uses: subosito/flutter-action@v1
-      - name: Run flutter tests
-        run: flutter test
+    # name: Flutter Test (Ubuntu Latest)
+    # runs-on: ubuntu-latest
+    # steps:
+    #   - name: Checkout
+    #     uses: actions/checkout@v2
+    #   - name: Setup Java
+    #     uses: actions/setup-java@v1
+    #     with:
+    #       java-version: '14.x'
+    #   - name: Setup flutter
+    #     uses: subosito/flutter-action@v1
+    #   - name: Run flutter tests
+    #     run: flutter test
       
   build_linux:
     name: Build Linux (Ubuntu Latest)
-    needs: test
+    # needs: test
     continue-on-error: true
     runs-on: ubuntu-latest
     steps:
@@ -38,7 +38,9 @@ jobs:
         uses: subosito/flutter-action@v1
       - name: Enable platforms and desktops
         run: |
-          flutter create --platforms linux,web,android .
+          flutter create --platforms linux .
+          flutter create --platforms web .
+          flutter create --platforms android .
           flutter config --enable-linux-desktop
       - name: Build Web
         run: flutter build web
@@ -47,23 +49,23 @@ jobs:
       - name: Build Linux
         run: flutter build linux
   
-  build_windows:
-    name: Build Windows (Windows Latest)
-    needs: test
-    continue-on-error: true
-    runs-on: windows-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup Java
-        uses: actions/setup-java@v1
-        with:
-          java-version: '14.x'
-      - name: Setup flutter
-        uses: subosito/flutter-action@v1
-      - name: Enable platform and desktop
-        run: |
-          flutter create --platforms windows .
-          flutter config --enable-windows-desktop
-      - name: Build Windows
-        run: flutter build windows
+  # build_windows:
+  #   name: Build Windows (Windows Latest)
+  #   needs: test
+  #   continue-on-error: true
+  #   runs-on: windows-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+  #     - name: Setup Java
+  #       uses: actions/setup-java@v1
+  #       with:
+  #         java-version: '14.x'
+  #     - name: Setup flutter
+  #       uses: subosito/flutter-action@v1
+  #     - name: Enable platform and desktop
+  #       run: |
+  #         flutter create --platforms windows .
+  #         flutter config --enable-windows-desktop
+  #     - name: Build Windows
+  #       run: flutter build windows
