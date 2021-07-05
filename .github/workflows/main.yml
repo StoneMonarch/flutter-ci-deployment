@@ -23,8 +23,8 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v2
-      - name: Flutter Mate
-        uses: Techno-Disaster/Flutter-Mate@v1.0.0
+      - name: flutter-cli
+        uses: steebchen/flutter@v1.1.0
         
       - name: Check flutter doctor
         run: flutter doctor
