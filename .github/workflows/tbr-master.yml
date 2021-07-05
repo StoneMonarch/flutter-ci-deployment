@@ -25,9 +25,11 @@ jobs:
   build_linux:
     name: Build Linux (Ubuntu Latest)
     # needs: test
-    continue-on-error: true
+    # continue-on-error: true
     runs-on: ubuntu-latest
     steps:
+      - name: Export Release Timestamp
+        run: echo "APP_VERSION=v$(date +'%Y.%m.%d.%H.%m.%S')" >> $GITHUB_ENV
       - name: Checkout
         uses: actions/checkout@v2
       - name: Setup Java
@@ -36,8 +38,8 @@ jobs:
           java-version: '14.x'
       - name: Setup flutter
         uses: subosito/flutter-action@v1
-      - name: Install dev dependencies
-        run: sudo apt install -y clang cmake ninja-build pkg-config libgtk-3-dev
+      # - name: Install dev dependencies
+        # run: sudo apt install -y clang cmake ninja-build pkg-config libgtk-3-dev
       - name: Enable platforms and desktops
         run: |
           flutter config --enable-linux-desktop
@@ -45,11 +47,21 @@ jobs:
           flutter create --platforms web .
           flutter create --platforms android .
       - name: Build Web
-        run: flutter build web
+        run: |
+          flutter build web
+          cd build/web
+          zip -r web-app.zip .
       - name: Build APK
         run: flutter build apk --split-per-abi
-      - name: Build Linux
-        run: flutter build linux
+      # - name: Build Linux
+      #   run: flutter build linux
+      - name: Release Apps
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ env.APP_VERSION }}
+          name: ${{ env.APP_VERSION }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: 'build/app/outputs/apk/release/*.apk,build/web/web-app.zip'
   
   # build_windows:
   #   name: Build Windows (Windows Latest)
