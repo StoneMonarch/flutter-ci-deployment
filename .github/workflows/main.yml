@@ -15,45 +15,45 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-#   test:
-#     name: Test on ubuntu-latest
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v2
-#       - uses: actions/setup-java@v1
-#         with:
-#           java-version: '14.x'
-#       - uses: subosito/flutter-action@v1
-#       - run: flutter test
+  test:
+    name: Test on ubuntu-latest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '14.x'
+      - uses: subosito/flutter-action@v1
+      - run: flutter test
   
-#   build_web:
-#     needs: test
-#     continue-on-error: true
-#     name: Build on web app
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v2
-#       - uses: actions/setup-java@v1
-#         with:
-#           java-version: '14.x'
-#       - uses: subosito/flutter-action@v1
-#       - run: flutter build web
+  build_web:
+    needs: test
+    continue-on-error: true
+    name: Build on web app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '14.x'
+      - uses: subosito/flutter-action@v1
+      - run: flutter build web
       
-#   build_apk:
-#     needs: test
-#     continue-on-error: true
-#     name: Build apk
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v2
-#       - uses: actions/setup-java@v1
-#         with:
-#           java-version: '14.x'
-#       - uses: subosito/flutter-action@v1
-#       - run: flutter build apk --split-per-abi
+  build_apk:
+    needs: test
+    continue-on-error: true
+    name: Build apk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '14.x'
+      - uses: subosito/flutter-action@v1
+      - run: flutter build apk --split-per-abi
       
   build_linux:
-#     needs: test
+    needs: test
     continue-on-error: true
     name: Build Linux
     runs-on: ubuntu-latest
@@ -65,23 +65,20 @@ jobs:
           java-version: '14.x'
       - uses: subosito/flutter-action@v1
       - run: flutter config --enable-linux-desktop
-      - run: flutter doctor
-      - run: pwd
-      - run: ls -lah
       - run: flutter create --platforms linux .
       - run: flutter build linux 
   
-#   build_windows:
-# #     needs: test
-#     continue-on-error: true
-#     name: Build on windows-latest for Windows
-#     runs-on: windows-latest
-#     steps:
-#       - uses: actions/checkout@v2
-#       - uses: actions/setup-java@v1
-#         with:
-#           java-version: '14.x'
-#       - uses: subosito/flutter-action@v1
-#       - run: flutter config --enable-windows-desktop
-#       - run: flutter doctor
-#       - run: flutter build windows
+  build_windows:
+    needs: test
+    continue-on-error: true
+    name: Build on windows-latest for Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '14.x'
+      - uses: subosito/flutter-action@v1
+      - run: flutter config --enable-windows-desktop
+      - run: flutter doctor
+      - run: flutter build windows
