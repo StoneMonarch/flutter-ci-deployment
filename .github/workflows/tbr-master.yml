@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  # test:
     # name: Flutter Test (Ubuntu Latest)
     # runs-on: ubuntu-latest
     # steps:
