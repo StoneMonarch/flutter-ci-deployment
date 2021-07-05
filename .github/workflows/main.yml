@@ -66,19 +66,22 @@ jobs:
       - uses: subosito/flutter-action@v1
       - run: flutter config --enable-linux-desktop
       - run: flutter doctor
-      - run: flutter build linux 
+      - run: pwd
+      - run: ls -lah
+      - run: flutter create --platforms linux .
+#       - run: flutter build linux 
   
-  build_windows:
-#     needs: test
-    continue-on-error: true
-    name: Build on windows-latest for Windows
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-java@v1
-        with:
-          java-version: '14.x'
-      - uses: subosito/flutter-action@v1
-      - run: flutter config --enable-windows-desktop
-      - run: flutter doctor
+#   build_windows:
+# #     needs: test
+#     continue-on-error: true
+#     name: Build on windows-latest for Windows
+#     runs-on: windows-latest
+#     steps:
+#       - uses: actions/checkout@v2
+#       - uses: actions/setup-java@v1
+#         with:
+#           java-version: '14.x'
+#       - uses: subosito/flutter-action@v1
+#       - run: flutter config --enable-windows-desktop
+#       - run: flutter doctor
       - run: flutter build windows
