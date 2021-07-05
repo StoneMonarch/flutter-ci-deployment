@@ -38,10 +38,10 @@ jobs:
         uses: subosito/flutter-action@v1
       - name: Enable platforms and desktops
         run: |
+          flutter config --enable-linux-desktop
           flutter create --platforms linux .
           flutter create --platforms web .
           flutter create --platforms android .
-          flutter config --enable-linux-desktop
       - name: Build Web
         run: flutter build web
       - name: Build APK
@@ -65,7 +65,7 @@ jobs:
   #       uses: subosito/flutter-action@v1
   #     - name: Enable platform and desktop
   #       run: |
-  #         flutter create --platforms windows .
   #         flutter config --enable-windows-desktop
+  #         flutter create --platforms windows .
   #     - name: Build Windows
   #       run: flutter build windows
