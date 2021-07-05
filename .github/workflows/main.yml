@@ -29,6 +29,7 @@ jobs:
   
   build:
     needs: test
+    continue-on-error: true
     name: Build on ubuntu-latest for ${{ matrix.app_version }}
     strategy:
       matrix:
