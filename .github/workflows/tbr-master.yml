@@ -23,50 +23,50 @@ jobs:
   #       uses: subosito/flutter-action@v1
   #     - name: Run flutter tests
   #       run: flutter test
-  # generate-changelog:
-  #   name: Generate Changelogs
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Get latest release tag
-  #       id: get_latest_release
-  #       uses: pozetroninc/github-action-get-latest-release@v0.5.0
-  #       with:
-  #         repository: ${{ github.repository }}
-  #         excludes: prerelease, draft
-  #     - name: Generate changelog since last release
-  #       uses: charmixer/auto-changelog-action@v1
-  #       with:
-  #         token: ${{ secrets.GITHUB_TOKEN }}
-  #         future_release: ${{ github.ref }}
-  #         since_tag: ${{ steps.get_latest_release.outputs.release }}
-  #     - name: Upload changelog
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: changelog
-  #         path: CHANGELOG.md
+  generate-changelog:
+    name: Generate Changelogs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get latest release tag
+        id: get_latest_release
+        uses: pozetroninc/github-action-get-latest-release@v0.5.0
+        with:
+          repository: ${{ github.repository }}
+          excludes: prerelease, draft
+      - name: Generate changelog since last release
+        uses: charmixer/auto-changelog-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          future_release: ${{ github.ref }}
+          since_tag: ${{ steps.get_latest_release.outputs.release }}
+      - name: Upload changelog
+        uses: actions/upload-artifact@v2
+        with:
+          name: changelog
+          path: CHANGELOG.md
 
-  # draft-release:
-  #   name: Draft Github release
-  #   needs: generate-changelog
-  #   runs-on: ubuntu-20.04
-  #   outputs:
-  #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-  #   steps:
-  #   - name: Download changelog
-  #     uses: actions/download-artifact@v2
-  #     with:
-  #       name: changelog
-  #   - name: Draft release with changelog
-  #     id: create_release
-  #     uses: actions/create-release@v1
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #     with:
-  #       tag_name: ${{ github.ref }}
-  #       release_name: Flutter Gallery ${{ github.ref }}
-  #       body_path: CHANGELOG.md
-  #       draft: true
-  #       prerelease: false
+  draft-release:
+    name: Draft Github release
+    needs: generate-changelog
+    runs-on: ubuntu-20.04
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+    - name: Download changelog
+      uses: actions/download-artifact@v2
+      with:
+        name: changelog
+    - name: Draft release with changelog
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Flutter CI Test ${{ github.ref }}
+        body_path: CHANGELOG.md
+        draft: true
+        prerelease: false
 
   create-build:
     name: Create ${{ matrix.target }} build
@@ -76,7 +76,7 @@ jobs:
         target: [Android, Windows, Linux, Web]
         include:
         - os: ubuntu-20.04
-          build_target: apk --split-per-abi
+          build_target: apk
           build_path: build/app/outputs/apk/release
           asset_extension: .apk
           asset_content_type: application/vnd.android.package-archive
@@ -154,6 +154,42 @@ jobs:
 
     # Build the application.
     - run: flutter build -v ${{ matrix.build_target }} --release
+
+    # Package the builds
+    - name: Copy VC redistributables to release directory for Windows
+      if: matrix.target == 'Windows'
+      run: |
+        Copy-Item (vswhere -latest -find 'VC\Redist\MSVC\*\x64\*\msvcp140.dll') .
+        Copy-Item (vswhere -latest -find 'VC\Redist\MSVC\*\x64\*\vcruntime140.dll') .
+        Copy-Item (vswhere -latest -find 'VC\Redist\MSVC\*\x64\*\vcruntime140_1.dll') .
+    - name: Rename build for Android
+      if: matrix.target == 'Android'
+      run: mv app-release.apk $GITHUB_WORKSPACE/flutter_ci_test_${{ matrix.target }}.apk
+      working-directory: ${{ matrix.build_path }}
+    - name: Compress build for Linux
+      if: matrix.target == 'Linux'
+      run: tar czf $GITHUB_WORKSPACE/flutter_ci_test_${{ matrix.target }}.tar.gz *
+      working-directory: ${{ matrix.build_path }}
+    - name: Compress build for Windows
+      if: matrix.target == 'Windows'
+      run: compress-archive -Path * -DestinationPath ${env:GITHUB_WORKSPACE}\flutter_ci_test_${{ matrix.target }}.zip
+      working-directory: ${{ matrix.build_path }}
+    - name: Compress build for Web
+      if: matrix.target == 'Web'
+      run: tar czf $GITHUB_WORKSPACE/flutter_ci_test_${{ matrix.target }}.tar.gz *
+      working-directory: ${{ matrix.build_path }}
+
+    # Upload the build.
+    - name: Add packaged build to release draft
+      id: upload_release_asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.draft-release.outputs.upload_url }}
+        asset_path: ./flutter_ci_test_${{ matrix.target }}${{ matrix.asset_extension }}
+        asset_name: flutter_ci_test_${{ matrix.target }}${{ matrix.asset_extension }}
+        asset_content_type: ${{ matrix.asset_content_type }}
 
 
 #######################################################################################
