@@ -149,6 +149,11 @@ jobs:
     # Checkout code, create missing files, and get packages
     - name: Checkout
       uses: actions/checkout@v2
+    - run: flutter create .
+    - run: flutter pub get
+
+    # Build the application.
+    - run: flutter build -v ${{ matrix.build_target }} --release
 
 
 #######################################################################################
