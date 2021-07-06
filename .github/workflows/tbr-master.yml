@@ -100,7 +100,7 @@ jobs:
           asset_content_type: application/gzip
       # Disable fail-fast as we want results from all even if one fails.
       fail-fast: false
-    # needs: draft-release
+    needs: draft-release
     steps:
     # Set up flutter
     - name: Set up flutter master channel
