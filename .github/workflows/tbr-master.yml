@@ -31,7 +31,6 @@ jobs:
         uses: pozetroninc/github-action-get-latest-release@v0.5.0
         with:
           repository: ${{ github.repository }}
-          excludes: prerelease, draft
       - name: Generate changelog since last release
         uses: charmixer/auto-changelog-action@v1
         with:
