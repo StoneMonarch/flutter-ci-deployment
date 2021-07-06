@@ -56,7 +56,7 @@ jobs:
       - name: Build Linux
         run: |
           flutter build linux
-          cd build/linux/x64
+          cd build/linux/x64/release
           ls -lah
       # - name: Release Apps
       #   uses: ncipollo/release-action@v1
