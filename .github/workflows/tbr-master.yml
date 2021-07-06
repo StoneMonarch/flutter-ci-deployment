@@ -2,7 +2,6 @@ name: Release
 
 on:
   workflow_dispatch:
-    #Enable Manual Run
   push:
     # branches: [master]
     tags: 
