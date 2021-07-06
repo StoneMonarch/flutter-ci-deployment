@@ -126,19 +126,16 @@ jobs:
     # Enable Windows support
     - name: Enable Windows support
       if: matrix.target == 'Windows'
-      run: |
-        flutter config --enable-windows-desktop
+      run: flutter config --enable-windows-desktop
 
     # Enable Web support
     - name: Enable Web support
       if: matrix.target == 'Web'
-      run: |
-        flutter config --enable-web
+      run: flutter config --enable-web
 
     # Check with flutter doctor
     - name: Check that flutter says that it is okay
-      run: |
-        flutter doctor -v
+      run: flutter doctor -v
 
     # Checkout code, create missing files, and get packages
     - name: Checkout
