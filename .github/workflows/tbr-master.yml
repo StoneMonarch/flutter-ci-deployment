@@ -33,7 +33,7 @@ jobs:
           repository: ${{ github.repository }}
           excludes: prerelease, draft
       - name: Generate changelog since last release
-      uses: charmixer/auto-changelog-action@v1
+        uses: charmixer/auto-changelog-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           future_release: ${{ github.ref }}
