@@ -1,10 +1,11 @@
-name: Test, Build, Release from MASTER
+name: Release
 
 on:
-  push:
-    branches: [ master ]
-
   workflow_dispatch:
+    #Enable Manual Run
+  push:
+    tags: 
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   # test:
@@ -21,57 +22,140 @@ jobs:
   #       uses: subosito/flutter-action@v1
   #     - name: Run flutter tests
   #       run: flutter test
-      
-  build_linux:
-    name: Build Linux (Ubuntu Latest)
-    # needs: test
-    continue-on-error: true
+  generate-changelog:
+    name: Generate Changelogs
     runs-on: ubuntu-latest
     steps:
-      # - name: Export Release Timestamp
-      #   run: echo "APP_VERSION=v$(date +'%Y.%m.%d.%H.%m.%S')" >> $GITHUB_ENV
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup Java
-        uses: actions/setup-java@v1
+      - name: Get latest release tag
+        id: get_latest_release
+        uses: pozetroninc/github-action-get-latest-release@v0.5.0
         with:
-          java-version: '14.x'
-      - name: Setup flutter
-        uses: subosito/flutter-action@v1
-      - name: Install dev dependencies
-        run: sudo apt install -y clang cmake ninja-build pkg-config libgtk-3-dev
-      - name: Enable platforms and desktops
-        run: |
-          flutter config --enable-linux-desktop
-          flutter create --platforms linux .
-          flutter create --platforms web .
-          flutter create --platforms android .
-      # - name: Build Web
-      #   run: |
-      #     flutter build web
-      #     cd build/web
-      #     zip -r web-app.zip .
-      # - name: Build APK
-      #   run: flutter build apk --split-per-abi
-      - name: Build Linux
-        run: |
-          flutter build linux
-          cd build/linux/x64/release/bundle
-          ls -lah
-      # - name: Release Apps
-      #   uses: ncipollo/release-action@v1
-      #   with:
-      #     tag: ${{ env.APP_VERSION }}
-      #     name: ${{ env.APP_VERSION }}
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     artifacts: 'build/app/outputs/apk/release/*.apk,build/web/web-app.zip'
-  
-  # build_windows:
-  #   name: Build Windows (Windows Latest)
-  #   needs: test
+          repository: ${{ github.repository }}
+          excludes: prerelease, draft
+      - name: Generate changelog since last release
+      uses: charmixer/auto-changelog-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          future_release: ${{ github.ref }}
+          since_tag: ${{ steps.get_latest_release.outputs.release }}
+      - name: Upload changelog
+        uses: actions/upload-artifact@v2
+        with:
+          name: changelog
+          path: CHANGELOG.md
+
+  draft-release:
+    name: Draft Github release
+    needs: generate-changelog
+    runs-on: ubuntu-20.04
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+    - name: Download changelog
+      uses: actions/download-artifact@v2
+      with:
+        name: changelog
+    - name: Draft release with changelog
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Flutter Gallery ${{ github.ref }}
+        body_path: CHANGELOG.md
+        draft: true
+        prerelease: false
+
+  create-build:
+    name: Create ${{ matrix.target }} build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        target: [Android, Windows, Linux, Web]
+        include:
+        - os: ubuntu-20.04
+          build_target: apk --split-per-abi
+          build_path: build/app/outputs/apk/release
+          asset_extension: .apk
+          asset_content_type: application/vnd.android.package-archive
+        - os: windows-2019
+          target: Windows
+          build_target: windows
+          build_path: build\windows\runner\Release
+          asset_extension: .zip
+          asset_content_type: application/zip
+        - os: ubuntu-20.04
+          target: Linux
+          build_target: linux
+          build_path: build/linux/x64/release/bundle
+          asset_extension: .tar.gz
+          asset_content_type: application/gzip
+        - os: ubuntu-20.04
+          target: Web
+          build_target: web
+          build_path: build/web
+          asset_extension: .tar.gz
+          asset_content_type: application/gzip
+      # Disable fail-fast as we want results from all even if one fails.
+      fail-fast: false
+    needs: draft-release
+    steps:
+    # Set up flutter
+    - name: Set up flutter master channel
+      uses: subosito/flutter-action@v1.5.0
+      with:
+        channel: master
+
+    # Install Linux dependencies
+    - name: Install Linux dependencies
+      if: matrix.target == 'Linux'
+      run: |
+        sudo apt update
+        sudo apt install -y libgtk-3-dev libx11-dev pkg-config cmake ninja-build libblkid-dev
+        flutter config --enable-linux-desktop
+
+    # Install Android dependencies
+    - name: Install Android dependencies
+      if: matrix.target == 'Android'
+      uses: actions/setup-java@v1
+      with:
+        java-version: '14.x'
+    - run: |
+      flutter config --enable-android
+
+    # Enable Windows support
+    - name: Enable Windows support
+      if: matrix.target == 'Windows'
+      run: |
+        flutter config --enable-windows-desktop
+
+    # Enable Web support
+    - name: Enable Web support
+      if: matrix.target == 'Web'
+      run: |
+        flutter config --enable-web
+
+    # Check with flutter doctor
+    - name: Check that flutter says that it is okay
+      run: |
+        flutter doctor -v
+
+    # Checkout code, create missing files, and get packages
+    - name: Checkout
+      uses: actions/checkout@v2
+
+
+#######################################################################################
+      
+  # build_linux:
+  #   name: Build Linux (Ubuntu Latest)
+  #   # needs: test
   #   continue-on-error: true
-  #   runs-on: windows-latest
+  #   runs-on: ubuntu-latest
   #   steps:
+  #     # - name: Export Release Timestamp
+  #     #   run: echo "APP_VERSION=v$(date +'%Y.%m.%d.%H.%m.%S')" >> $GITHUB_ENV
   #     - name: Checkout
   #       uses: actions/checkout@v2
   #     - name: Setup Java
@@ -80,9 +164,51 @@ jobs:
   #         java-version: '14.x'
   #     - name: Setup flutter
   #       uses: subosito/flutter-action@v1
-  #     - name: Enable platform and desktop
+  #     - name: Install dev dependencies
+  #       run: sudo apt install -y clang cmake ninja-build pkg-config libgtk-3-dev
+  #     - name: Enable platforms and desktops
   #       run: |
-  #         flutter config --enable-windows-desktop
-  #         flutter create --platforms windows .
-  #     - name: Build Windows
-  #       run: flutter build windows
+  #         flutter config --enable-linux-desktop
+  #         flutter create --platforms linux .
+  #         flutter create --platforms web .
+  #         flutter create --platforms android .
+  #     # - name: Build Web
+  #     #   run: |
+  #     #     flutter build web
+  #     #     cd build/web
+  #     #     zip -r web-app.zip .
+  #     # - name: Build APK
+  #     #   run: flutter build apk --split-per-abi
+  #     - name: Build Linux
+  #       run: |
+  #         flutter build linux
+  #         cd build/linux/x64/release/bundle
+  #         ls -lah
+  #     # - name: Release Apps
+  #     #   uses: ncipollo/release-action@v1
+  #     #   with:
+  #     #     tag: ${{ env.APP_VERSION }}
+  #     #     name: ${{ env.APP_VERSION }}
+  #     #     token: ${{ secrets.GITHUB_TOKEN }}
+  #     #     artifacts: 'build/app/outputs/apk/release/*.apk,build/web/web-app.zip'
+  
+  # # build_windows:
+  # #   name: Build Windows (Windows Latest)
+  # #   needs: test
+  # #   continue-on-error: true
+  # #   runs-on: windows-latest
+  # #   steps:
+  # #     - name: Checkout
+  # #       uses: actions/checkout@v2
+  # #     - name: Setup Java
+  # #       uses: actions/setup-java@v1
+  # #       with:
+  # #         java-version: '14.x'
+  # #     - name: Setup flutter
+  # #       uses: subosito/flutter-action@v1
+  # #     - name: Enable platform and desktop
+  # #       run: |
+  # #         flutter config --enable-windows-desktop
+  # #         flutter create --platforms windows .
+  # #     - name: Build Windows
+  # #       run: flutter build windows
