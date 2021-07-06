@@ -112,9 +112,13 @@ jobs:
     - name: Install Linux dependencies
       if: matrix.target == 'Linux'
       run: |
-        sudo apt update
-        sudo apt install -y libgtk-3-dev libx11-dev pkg-config cmake ninja-build libblkid-dev
-        flutter config --enable-linux-desktop
+        sudo apt-get update
+        sudo apt-get install -y libgtk-3-dev libx11-dev pkg-config cmake ninja-build libblkid-dev
+
+    # Enable Linux support
+    - name: Enable Linux support
+      if: matrix.target == 'Linux'
+      run: flutter config --enable-linux-desktop
 
     # Install Android dependencies
     - name: Install Android dependencies
@@ -122,7 +126,11 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: '14.x'
-    - run: flutter config --enable-android
+
+    # Enable Android support
+    - name: Enable Android support
+      if: matrix.target == 'Android'
+      run: flutter config --enable-android
 
     # Enable Windows support
     - name: Enable Windows support
