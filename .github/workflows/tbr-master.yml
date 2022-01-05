@@ -186,25 +186,25 @@ jobs:
     # Rename the android .apk to something nicer
     - name: Rename build for Android
       if: matrix.target == 'Android'
-      run: mv app-release.apk $GITHUB_WORKSPACE/flutter_ci_test_${{ matrix.target }}.apk
+      run: mv app-release.apk $GITHUB_WORKSPACE/flutter_pkg_${{ matrix.target }}.apk
       working-directory: ${{ matrix.build_path }}
 
     # Create a archive for the Linux build so people download everything that is needed in one package
     - name: Compress build for Linux
       if: matrix.target == 'Linux'
-      run: tar czf $GITHUB_WORKSPACE/flutter_ci_test_${{ matrix.target }}.tar.gz *
+      run: tar czf $GITHUB_WORKSPACE/flutter_pkg_${{ matrix.target }}.tar.gz *
       working-directory: ${{ matrix.build_path }}
 
     # Create a archive for the Windows build so people download everything that is needed in one package
     - name: Compress build for Windows
       if: matrix.target == 'Windows'
-      run: compress-archive -Path * -DestinationPath ${env:GITHUB_WORKSPACE}\flutter_ci_test_${{ matrix.target }}.zip
+      run: compress-archive -Path * -DestinationPath ${env:GITHUB_WORKSPACE}\flutter_pkg_${{ matrix.target }}.zip
       working-directory: ${{ matrix.build_path }}
 
     # Create a archive for the Web build so people download everything that is needed in one package
     - name: Compress build for Web
       if: matrix.target == 'Web'
-      run: tar czf $GITHUB_WORKSPACE/flutter_ci_test_${{ matrix.target }}.tar.gz *
+      run: tar czf $GITHUB_WORKSPACE/flutter_pkg_${{ matrix.target }}.tar.gz *
       working-directory: ${{ matrix.build_path }}
 
     # Upload the build to the draft release.
@@ -215,6 +215,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ needs.draft-release.outputs.upload_url }}
-        asset_path: ./flutter_ci_test_${{ matrix.target }}${{ matrix.asset_extension }}
-        asset_name: flutter_ci_test_${{ matrix.target }}${{ matrix.asset_extension }}
+        asset_path: ./flutter_pkg_${{ matrix.target }}${{ matrix.asset_extension }}
+        asset_name: flutter_pkg_${{ matrix.target }}${{ matrix.asset_extension }}
         asset_content_type: ${{ matrix.asset_content_type }}
